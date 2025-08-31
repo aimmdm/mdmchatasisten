@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0A1F44" id="meta-theme-color" />
+  <title>Ai Chat Assistent Pro</title>
+  <meta name="description" content="Ai Chat Assistent — Telegram Mini App SPA by MDM (marilmu dot marepeng). Chat AI profesional berbahasa Indonesia." />
+  <link rel="preconnect" href="https://text.pollinations.ai" />
+  <link rel="preconnect" href="https://aihorde.net" />
+<style>
+    :root{
+  --mdm-brand:#0A1F44;
+  --mdm-brand-600:#0C2A66;
+  --mdm-brand-700:#0A1F44;
+  --text:#101418;
+  --muted:#6B7280;
+  --bg:#FFFFFF;
+  --bg-elev:#F7F8FB;
+  --border:#E5E7EB;
+  --danger:#D92D20;
+  --radius:16px;
+  --shadow:0 8px 24px rgba(10,31,68,0.12);
+  --shadow-2:0 12px 32px rgba(10,31,68,0.18);
+}
+body.theme-dark{
+  --text:#E6E7EB;
+  --muted:#A1A1AA;
+  --bg:#0B1220;
+  --bg-elev:#121A2A;
+  --border:#1F2A44;
+  --shadow:0 8px 24px rgba(0,0,0,0.35);
+  --shadow-2:0 14px 40px rgba(0,0,0,0.45);
+}
+
+/* Base */
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family: "MDM","Inter","SF Pro Text","Segoe UI",system-ui,-apple-system,Arial,sans-serif;
+  font-size:16px; line-height:1.5;
+  color:var(--text); background:var(--bg);
+  -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+}
+#app{max-width:640px;margin:0 auto;display:flex;flex-direction:column;min-height:100vh;}
+
+/* Header */
+.app-header{
+  position:sticky; top:0; z-index:20;
+  display:flex; align-items:center; justify-content:space-between;
+  gap:8px; padding:12px 14px; background:var(--bg); border-bottom:1px solid var(--border);
+  backdrop-filter:saturate(1.1) blur(6px);
+}
+.icon-btn{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:40px; height:40px; border-radius:12px; border:1px solid var(--border);
+  color:var(--text); background:var(--bg-elev); transition:transform .15s ease, box-shadow .2s ease, background .2s ease;
+}
+.icon-btn:hover{ transform:scale(1.05); box-shadow:var(--shadow); }
+.app-title{display:flex; align-items:center; gap:10px; font-weight:700; letter-spacing:.2px; font-size:18px}
+.provider-badge{
+  font-size:12px; padding:4px 8px; background:var(--bg-elev); border:1px solid var(--border); border-radius:999px; color:var(--muted);
+}
+
+/* Progress */
+.progress{
+  position:sticky; top:56px; z-index:19; background:transparent; padding:6px 12px; display:none;
+}
+.progress[aria-hidden="false"]{ display:block; }
+.progress-track{ width:100%; height:6px; background:var(--bg-elev); border:1px solid var(--border); border-radius:999px; overflow:hidden; }
+.progress-bar{ height:100%; width:0%; background:linear-gradient(90deg, var(--mdm-brand), var(--mdm-brand-600)); transition:width .2s ease; }
+.progress-label{ font-size:12px; color:var(--muted); margin-top:6px; }
+
+/* Main */
+.app-main{ flex:1; display:flex; flex-direction:column; gap:10px; padding:12px; padding-bottom:96px; }
+
+/* Toolbar */
+.toolbar{display:flex; gap:8px; overflow-x:auto; -webkit-overflow-scrolling:touch; padding:4px 0;}
+.mdm-btn{
+  display:inline-flex; align-items:center; gap:8px; padding:10px 12px;
+  border-radius:14px; border:1px solid var(--border); background:var(--bg-elev); color:var(--text);
+  transition:transform .15s ease, box-shadow .2s ease, background .2s ease; white-space:nowrap;
+}
+.mdm-btn:hover{ transform:scale(1.05); box-shadow:var(--shadow); }
+.mdm-btn:disabled{ opacity:.55; cursor:not-allowed; }
+.mdm-btn.primary{ background:var(--mdm-brand); color:#fff; border-color:transparent; }
+.mdm-btn.danger{ color:#fff; background:var(--danger); border-color:transparent; }
+
+/* Chat */
+.chat-list{ display:flex; flex-direction:column; gap:12px; padding:6px 0; }
+.msg{
+  display:flex; gap:10px; align-items:flex-start;
+}
+.msg .avatar{
+  width:34px; height:34px; border-radius:999px; background:var(--bg-elev);
+  display:flex; align-items:center; justify-content:center; border:1px solid var(--border); color:var(--mdm-brand);
+}
+.msg .bubble{
+  max-width:85%; padding:10px 12px; border-radius:14px; border:1px solid var(--border); background:var(--bg-elev);
+  white-space:pre-wrap; word-wrap:break-word; overflow-wrap:break-word;
+}
+.msg.assistant .bubble{ background:#EAF1FF10; border-color:var(--border); }
+.msg.user{ flex-direction:row-reverse; }
+.msg.user .bubble{ background:var(--mdm-brand); color:#fff; border-color:transparent; }
+.msg.user .avatar{ background:var(--mdm-brand); color:#fff; border-color:transparent; }
+
+/* Composer */
+.composer{
+  position:sticky; bottom:64px; display:flex; gap:8px; background:var(--bg);
+  padding:10px 0; border-top:1px solid var(--border);
+}
+.composer textarea{
+  flex:1; resize:none; border-radius:12px; border:1px solid var(--border); background:var(--bg-elev);
+  padding:10px 12px; color:var(--text); max-height:180px; outline:none;
+}
+
+/* Footer */
+.app-footer{
+  position:fixed; bottom:0; left:50%; transform:translateX(-50%);
+  width:100%; max-width:640px; background:var(--bg); border-top:1px solid var(--border); padding:8px 10px; z-index:18;
+  display:grid; grid-template-columns:repeat(4,1fr); gap:8px;
+  border-top-left-radius:18px; border-top-right-radius:18px; box-shadow:var(--shadow);
+}
+.footer-btn{
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+  min-height:44px; padding:8px; border-radius:12px; border:1px solid var(--border); background:var(--bg-elev); color:var(--text);
+  font-size:12px; transition:transform .15s ease, box-shadow .2s ease;
+}
+.footer-btn:hover{ transform:scale(1.05); box-shadow:var(--shadow); }
+
+/* Modal */
+.mdm-modal{
+  border:none; padding:0; width:100%; max-width:640px; margin:auto;
+  background:transparent; opacity:0; transform:translateY(12px); transition:opacity .2s ease, transform .2s ease;
+}
+.mdm-modal[open]{opacity:1; transform:translateY(0)}
+.mdm-modal::backdrop{ background:rgba(0,0,0,.45) }
+.modal-card{
+  margin:0 auto; background:var(--bg); color:var(--text); border-radius:18px; box-shadow:var(--shadow-2);
+  border:1px solid var(--border); width:100%; max-height:90vh; overflow:auto;
+}
+.modal-header{ display:flex; justify-content:space-between; align-items:center; padding:12px 14px; border-bottom:1px solid var(--border); }
+.modal-title{ font-weight:700; }
+.modal-body{ padding:14px; }
+
+/* Toast */
+.toast{
+  position:fixed; left:50%; bottom:88px; transform:translateX(-50%);
+  background:var(--mdm-brand); color:#fff; padding:10px 14px; border-radius:12px; box-shadow:var(--shadow-2);
+  opacity:0; pointer-events:none; transition:opacity .25s ease, transform .25s ease;
+  max-width:90%; word-break:break-word; z-index:100;
+}
+.toast.show{ opacity:1; transform:translateX(-50%) translateY(-4px); }
+
+/* Utilities */
+.noscript{ padding:12px; color:#fff; background:#D92D20; text-align:center; }
+.hide{ display:none !important; }
+.small{ font-size:12px; color:var(--muted); }
+
+/* Focus */
+button:focus, textarea:focus{ outline:2px solid #A5B4FC44; outline-offset:2px; }
+  </style>
+  <script src="https://libtl.com/sdk.js" data-zone="9256839" data-sdk="show_9256839" async></script>
+  <script>
+    window.__MDM_BOOT = {
+      title: "Ai Chat Assistent",
+      brand: { name: "MDM", color: "#0A1F44" }
+    };
+  </script>
+</head>
+<body class="theme-dark">
+  <div id="app">
+    <!-- Header -->
+    <header class="app-header">
+      <button id="btnMenu" class="icon-btn" aria-label="Menu" title="Menu">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+      <div class="app-title">
+        <span id="dynamicTitle">Ai Chat Assistent</span>
+        <span id="providerBadge" class="provider-badge" title="Worker aktif">Pollinations</span>
+      </div>
+      <button id="btnTheme" class="icon-btn" aria-label="Tema" title="Ubah Tema">
+        <svg id="iconTheme" width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <path d="M12 3a9 9 0 1 0 9 9c0-4.97-4.03-9-9-9z" stroke="currentColor" stroke-width="2" />
+        </svg>
+      </button>
+    </header>
+
+    <!-- Progress -->
+    <div id="progressBar" class="progress" aria-hidden="true">
+      <div class="progress-track">
+        <div class="progress-bar" id="progressInner"></div>
+      </div>
+      <div class="progress-label" id="progressLabel">Memulai…</div>
+    </div>
+
+    <!-- Main -->
+    <main class="app-main">
+      <!-- Toolbar Aksi -->
+      <div class="toolbar">
+        <button id="btnExport" class="mdm-btn" data-reward="1" title="Ekspor Riwayat (JSON)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Ekspor
+        </button>
+        <button id="btnImport" class="mdm-btn" data-reward="1" title="Impor Riwayat (JSON)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 21V9m0 0l4 4m-4-4L8 13M4 3h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Impor
+        </button>
+        <button id="btnDownload" class="mdm-btn" data-reward="1" title="Unduh Riwayat (.txt)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M7 21h10M12 3v12m0 0l-4-4m4 4l4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Unduh
+        </button>
+        <button id="btnClear" class="mdm-btn danger" data-reward="1" title="Bersihkan Riwayat">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6v12m8-12v12M10 6l1-2h2l1 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          Bersihkan
+        </button>
+      </div>
+
+      <!-- Chat List -->
+      <section id="chatList" class="chat-list" aria-live="polite"></section>
+
+      <!-- Composer -->
+      <div class="composer">
+        <textarea id="inputMessage" rows="1" placeholder="Mulai obrolan…" maxlength="4000"></textarea>
+        <button id="btnSend" class="mdm-btn primary" data-reward="1">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 12l18-9-7 18-2-7-9-2z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+          Kirim
+        </button>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <button class="footer-btn" id="btnProfile" data-reward="1">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5zm7 9a7 7 0 1 0-14 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        Profil
+      </button>
+      <button class="footer-btn" id="btnPrivacy" data-reward="1">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2l7 4v6a9 9 0 1 1-14 0V6l7-4z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        Privasi
+      </button>
+      <button class="footer-btn" id="btnDisclaimer" data-reward="1">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 9v4m0 4h.01M4 4h16v16H4z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        Disclaimer
+      </button>
+      <button class="footer-btn" id="btnContact" data-reward="1">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21 10v10a2 2 0 0 1-2 2H5l-3 3V5a2 2 0 0 1 2-2h11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        Hubungi
+      </button>
+    </footer>
+  </div>
+
+  <!-- Modal / Bottom Sheet -->
+  <dialog id="modal" class="mdm-modal">
+    <div class="modal-card" role="document">
+      <div class="modal-header">
+        <div class="modal-title" id="modalTitle">Modal</div>
+        <button id="btnCloseModal" class="icon-btn" aria-label="Tutup">
+          <svg width="20" height="20" viewBox="0 0 24 24"><path d="M6 6l12 12M6 18L18 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </dialog>
+
+  <!-- Hidden file input for Import -->
+  <input type="file" id="fileImport" accept="application/json" hidden />
+
+  <div id="toast" class="toast" aria-live="assertive"></div>
+
+  <noscript>
+    <div class="noscript">Silakan aktifkan JavaScript untuk menggunakan Ai Chat Assistent.</div>
+  </noscript>
+
+<script>
+(() => {
+  const BRAND = (window.__MDM_BOOT && window.__MDM_BOOT.brand) || { name: "MDM", color: "#0A1F44" };
+  const TITLE = (window.__MDM_BOOT && window.__MDM_BOOT.title) || "Ai Chat Assistent";
+  const STORAGE_KEY = "mdm:aichatpro:history:v1";
+  const THEME_KEY = "mdm:theme";
+  const PROVIDERS = {
+    primary: { id: "pollinations", label: "Pollinations" },
+    fallback: { id: "horde", label: "AI Horde" },
+    local: { id: "local", label: "Fallback Lokal" }
+  };
+
+  // State
+  const state = {
+    provider: PROVIDERS.primary,
+    messages: [],
+    isBusy: false,
+    queue: [],
+    progress: { timer: null, pct: 0, label: "" }
+  };
+
+  // DOM
+  const el = {
+    title: document.getElementById("dynamicTitle"),
+    badge: document.getElementById("providerBadge"),
+    progress: document.getElementById("progressBar"),
+    progressInner: document.getElementById("progressInner"),
+    progressLabel: document.getElementById("progressLabel"),
+    chatList: document.getElementById("chatList"),
+    input: document.getElementById("inputMessage"),
+    btnSend: document.getElementById("btnSend"),
+    btnExport: document.getElementById("btnExport"),
+    btnImport: document.getElementById("btnImport"),
+    btnDownload: document.getElementById("btnDownload"),
+    btnClear: document.getElementById("btnClear"),
+    btnTheme: document.getElementById("btnTheme"),
+    btnMenu: document.getElementById("btnMenu"),
+    footerBtns: {
+      profile: document.getElementById("btnProfile"),
+      privacy: document.getElementById("btnPrivacy"),
+      disclaimer: document.getElementById("btnDisclaimer"),
+      contact: document.getElementById("btnContact"),
+    },
+    modal: document.getElementById("modal"),
+    modalTitle: document.getElementById("modalTitle"),
+    modalBody: document.getElementById("modalBody"),
+    btnCloseModal: document.getElementById("btnCloseModal"),
+    fileImport: document.getElementById("fileImport"),
+    toast: document.getElementById("toast"),
+    metaTheme: document.getElementById("meta-theme-color"),
+  };
+
+  // Utils
+  const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+  const nowTs = () => new Date().toISOString();
+  const uid = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+  function toast(msg, ms = 2400) {
+    el.toast.textContent = msg;
+    el.toast.classList.add("show");
+    clearTimeout(el.toast.__t);
+    el.toast.__t = setTimeout(() => el.toast.classList.remove("show"), ms);
+  }
+
+  // Theme
+  function applyTheme(theme) {
+    const dark = theme === "dark";
+    document.body.classList.toggle("theme-dark", dark);
+    if (el.metaTheme) el.metaTheme.setAttribute("content", dark ? BRAND.color : "#ffffff");
+    localStorage.setItem(THEME_KEY, theme);
+  }
+  function toggleTheme() {
+    const current = document.body.classList.contains("theme-dark") ? "dark" : "light";
+    applyTheme(current === "dark" ? "light" : "dark");
+  }
+
+  // Progress
+  const Progress = {
+    start(label = "Memulai…") {
+      this.setLabel(label);
+      state.progress.pct = 0;
+      el.progress.setAttribute("aria-hidden", "false");
+      if (state.progress.timer) clearInterval(state.progress.timer);
+      state.progress.timer = setInterval(() => {
+        state.progress.pct = clamp(state.progress.pct + (Math.random() * 6 + 2), 0, 92);
+        el.progressInner.style.width = state.progress.pct + "%";
+      }, 50);
+    },
+    setLabel(label) {
+      state.progress.label = label;
+      el.progressLabel.textContent = label;
+    },
+    finish() {
+      if (state.progress.timer) clearInterval(state.progress.timer);
+      el.progressInner.style.width = "100%";
+      setTimeout(() => {
+        el.progress.setAttribute("aria-hidden", "true");
+        el.progressInner.style.width = "0%";
+        state.progress.pct = 0;
+      }, 250);
+    },
+    fail() {
+      if (state.progress.timer) clearInterval(state.progress.timer);
+      el.progressInner.style.width = "0%";
+      el.progress.setAttribute("aria-hidden", "true");
+      state.progress.pct = 0;
+    }
+  };
+
+  // Monetag Reward (retry 3x, timeout 15s)
+  async function ensureMonetagLoaded(timeoutMs = 15000) {
+    if (typeof window.show_9256839 === "function") return true;
+    // try reload once
+    await new Promise((resolve) => {
+      const existing = document.querySelector('script[src*="libtl.com/sdk.js"]');
+      if (existing) {
+        let done = false;
+        const to = setTimeout(() => { if (!done) resolve(false); }, timeoutMs);
+        existing.addEventListener("load", () => { done = true; clearTimeout(to); resolve(true); });
+        existing.addEventListener("error", () => { done = true; clearTimeout(to); resolve(false); });
+      } else {
+        const s = document.createElement("script");
+        s.src = "https://libtl.com/sdk.js";
+        s.async = true;
+        s.dataset.zone = "9256839";
+        s.dataset.sdk = "show_9256839";
+        let done = false;
+        const to = setTimeout(() => { if (!done) resolve(false); }, timeoutMs);
+        s.onload = () => { done = true; clearTimeout(to); resolve(true); };
+        s.onerror = () => { done = true; clearTimeout(to); resolve(false); };
+        document.head.appendChild(s);
+      }
+    });
+    return typeof window.show_9256839 === "function";
+  }
+
+  async function showRewardOnce(btnEl) {
+    const attempts = 3;
+    for (let i = 1; i <= attempts; i++) {
+      const loaded = await ensureMonetagLoaded(17000);
+      if (!loaded) {
+        if (i >= attempts) return false;
+        await sleep(600);
+        continue;
+      }
+      try {
+        // SDK signature unknown; we call and proceed after small delay as reward.
+        window.show_9256839 && window.show_9256839();
+        await sleep(1200); // allow ad to render as "reward"
+        return true;
+      } catch (e) {
+        if (i >= attempts) return false;
+        await sleep(600);
+      }
+    }
+    return false;
+  }
+
+  async function withReward(btnEl, actionFn, progressLabel = "Memproses…") {
+    if (state.isBusy) {
+      // Queue next action to prevent race conditions
+      return enqueue(() => withReward(btnEl, actionFn, progressLabel));
+    }
+    try {
+      state.isBusy = true;
+      if (btnEl) btnEl.disabled = true;
+      Progress.start("Memuat iklan…");
+      const ok = await showRewardOnce(btnEl);
+      if (!ok) {
+        Progress.fail();
+        toast("Gagal memuat iklan, coba lagi");
+        return;
+      }
+      Progress.setLabel(progressLabel);
+      await actionFn();
+      Progress.finish();
+    } catch (err) {
+      console.error(err);
+      Progress.fail();
+      toast(err?.message || "Terjadi kesalahan");
+    } finally {
+      if (btnEl) btnEl.disabled = false;
+      state.isBusy = false;
+      processQueue();
+    }
+  }
+
+  // Queue (concurrent-safe)
+  function enqueue(fn) {
+    return new Promise((resolve, reject) => {
+      state.queue.push({ fn, resolve, reject });
+      if (!state.isBusy) processQueue();
+    });
+  }
+  async function processQueue() {
+    if (state.isBusy) return;
+    const job = state.queue.shift();
+    if (!job) return;
+    try {
+      state.isBusy = true;
+      await job.fn();
+      job.resolve();
+    } catch (e) {
+      job.reject(e);
+    } finally {
+      state.isBusy = false;
+      processQueue();
+    }
+  }
+
+  // Messages
+  function loadHistory() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+  function saveHistory() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state.messages));
+  }
+
+  function renderMessages() {
+    el.chatList.innerHTML = "";
+    for (const m of state.messages) appendMessageEl(m);
+    // Auto scroll
+    setTimeout(() => el.chatList.scrollTop = el.chatList.scrollHeight, 0);
+  }
+
+  function appendMessageEl(msg) {
+    const wrap = document.createElement("div");
+    wrap.className = `msg ${msg.role}`;
+    wrap.dataset.id = msg.id;
+
+    const avatar = document.createElement("div");
+    avatar.className = "avatar";
+    avatar.innerHTML = msg.role === "assistant"
+      ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2l7 4v6a9 9 0 1 1-14 0V6l7-4z" stroke="currentColor" stroke-width="2"/></svg>'
+      : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5zm7 9a7 7 0 1 0-14 0" stroke="currentColor" stroke-width="2"/></svg>';
+
+    const bubble = document.createElement("div");
+    bubble.className = "bubble";
+    bubble.textContent = msg.content;
+
+    wrap.appendChild(avatar);
+    wrap.appendChild(bubble);
+    el.chatList.appendChild(wrap);
+  }
+
+  function updateAssistantMessage(id, newText) {
+    const node = el.chatList.querySelector(`.msg[data-id="${id}"] .bubble`);
+    if (node) node.textContent = newText;
+  }
+
+  // Title / Category parse (simple: chat)
+  function parseTitle(title) {
+    return {
+      title,
+      category: "chat",
+      features: ["kirim", "riwayat", "ekspor", "impor", "unduh", "bersihkan"],
+      capabilityKey: "chat"
+    };
+  }
+
+  // Provider Integration
+  function buildPrompt(messages) {
+    const sys = 'Anda adalah "Ai Chat Assistent" milik MDM (marilmu dot marepeng). Jawab ringkas, jelas, dan akurat dalam Bahasa Indonesia. Jika ragu, sebutkan keterbatasan dan sarankan langkah berikutnya.';
+    const last = messages.slice(-8);
+    const conv = last.map(m => (m.role === "assistant" ? `Assistant: ${m.content}` : `User: ${m.content}`)).join("\n");
+    return `${sys}\n\n${conv}\nAssistant:`;
+  }
+
+  async function callPollinations(messages, onProgress) {
+    onProgress?.("Menghubungkan…");
+    const prompt = buildPrompt(messages);
+    const url = "https://text.pollinations.ai/" + encodeURIComponent(prompt);
+    const ctrl = new AbortController();
+    const to = setTimeout(() => ctrl.abort(), 20000);
+    try {
+      const res = await fetch(url, { method: "GET", headers: { "Accept": "text/plain" }, signal: ctrl.signal });
+      if (!res.ok) throw new Error("Pollinations gagal (" + res.status + ")");
+      onProgress?.("Balasan…");
+      const text = await res.text();
+      return sanitizeText(text);
+    } finally {
+      clearTimeout(to);
+    }
+  }
+
+  async function callHorde(messages, onProgress) {
+    onProgress?.("Menghubungkan ke AI Horde…");
+    const prompt = buildPrompt(messages);
+    const start = Date.now();
+    // Submit
+    const submitRes = await fetch("https://aihorde.net/api/v2/generate/text", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "apikey": "00000000-0000-0000-0000-000000000000" // anonymous
+      },
+      body: JSON.stringify({
+        prompt,
+        n: 1,
+        models: ["*"],
+        params: {
+          max_context_length: 2048,
+          max_length: 280,
+          temperature: 0.7,
+          top_p: 0.9,
+          repetition_penalty: 1.1
+        }
+      })
+    });
+    if (!submitRes.ok) throw new Error("AI Horde submit gagal (" + submitRes.status + ")");
+    const submitJson = await submitRes.json();
+    const id = submitJson.id || submitJson.request_id || submitJson.job_id;
+    if (!id) throw new Error("AI Horde tidak mengembalikan id");
+
+    // Poll status
+    let text = "";
+    const deadline = Date.now() + 60000; // 60s
+    while (Date.now() < deadline) {
+      await sleep(1400);
+      onProgress?.("Menunggu hasil dari AI Horde…");
+      const statRes = await fetch(`https://aihorde.net/api/v2/generate/text/status/${id}`, {
+        headers: { "Accept": "application/json", "apikey": "00000000-0000-0000-0000-000000000000" }
+      });
+      if (!statRes.ok) continue;
+      const stat = await statRes.json();
+      // If generations ready
+      if (stat.generations && stat.generations.length > 0) {
+        text = stat.generations[0].text || "";
+        break;
+      }
+      // Provide progress updates
+      const waited = Math.round((Date.now() - start) / 1000);
+      Progress.setLabel(`Menunggu antrian… (${waited}s)`);
+    }
+    if (!text) throw new Error("AI Horde waktu habis");
+    return sanitizeText(text);
+  }
+
+  function sanitizeText(t) {
+    let s = (t || "").trim();
+    // Remove leading "Assistant:" if any
+    s = s.replace(/^Assistant:\s*/i, "");
+    // Collapse excess newlines
+    s = s.replace(/\n{3,}/g, "\n\n");
+    return s;
+  }
+
+  function buildPipeline(capabilityKey) {
+    if (capabilityKey !== "chat") throw new Error("Capability tidak didukung");
+    return {
+      async run(input, settings = {}, onProgress) {
+        const tries = 3;
+        let lastErr = null;
+
+        // Primary: Pollinations
+        for (let i = 0; i < tries; i++) {
+          try {
+            state.provider = PROVIDERS.primary;
+            updateProviderBadge();
+            return await callPollinations(input.messages, onProgress);
+          } catch (e) {
+            lastErr = e;
+            await sleep(400);
+          }
+        }
+
+        // Fallback: AI Horde
+        for (let i = 0; i < tries; i++) {
+          try {
+            state.provider = PROVIDERS.fallback;
+            updateProviderBadge();
+            return await callHorde(input.messages, onProgress);
+          } catch (e) {
+            lastErr = e;
+            await sleep(400);
+          }
+        }
+
+        // Final fallback: simple local heuristic
+        state.provider = PROVIDERS.local;
+        updateProviderBadge();
+        return localFallbackReply(input.messages, lastErr);
+      }
+    };
+  }
+
+  function localFallbackReply(messages, err) {
+    const lastUser = [...messages].reverse().find(m => m.role === "user");
+    const q = lastUser ? lastUser.content : "";
+    const lines = [
+      "Maaf, layanan AI sedang tidak tersedia.",
+      "Ini saran langkah berikutnya berdasarkan pesan kamu:",
+      "• Perjelas pertanyaan atau beri konteks tambahan.",
+      "• Coba lagi beberapa saat (koneksi/provider mungkin sibuk).",
+      "• Jika mendesak, hubungi kami melalui menu Hubungi."
+    ];
+    if (q) lines.unshift(`Ringkas pertanyaan: “${q.slice(0, 180)}${q.length>180?'…':''}”`);
+    if (err) lines.push(`Catatan teknis: ${String(err.message || err).slice(0,120)}`);
+    return lines.join("\n");
+  }
+
+  const pipeline = buildPipeline("chat");
+
+  // UI Actions
+  async function sendMessageFlow() {
+    const text = (el.input.value || "").trim();
+    if (!text) return;
+    // Push user
+    const userMsg = { id: uid(), role: "user", content: text, ts: nowTs() };
+    state.messages.push(userMsg);
+    appendMessageEl(userMsg);
+    el.input.value = "";
+    autoResizeInput();
+
+    // Placeholder assistant
+    const asstMsg = { id: uid(), role: "assistant", content: "Menulis balasan…", ts: nowTs() };
+    state.messages.push(asstMsg);
+    appendMessageEl(asstMsg);
+    saveHistory();
+    scrollToBottom();
+
+    // Run pipeline
+    const output = await pipeline.run({ messages: state.messages }, {}, (label) => Progress.setLabel(label));
+    updateAssistantMessage(asstMsg.id, output);
+    asstMsg.content = output;
+    saveHistory();
+    scrollToBottom();
+  }
+
+  function scrollToBottom() {
+    setTimeout(() => { el.chatList.scrollTop = el.chatList.scrollHeight; }, 0);
+  }
+
+  function exportJSON() {
+    const data = JSON.stringify(state.messages, null, 2);
+    const blob = new Blob([data], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `AiChatAssistentPro_${Date.now()}.json`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  function downloadTXT() {
+    const text = state.messages.map(m => (m.role === "user" ? "Kamu: " : "Asisten: ") + m.content).join("\n\n");
+    const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `AiChatAssistentPro_${Date.now()}.txt`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  function openImportModal() {
+    openModal("Impor Riwayat", `
+      <p>Impor berkas JSON yang sebelumnya diekspor dari aplikasi ini.</p>
+      <div style="display:flex; gap:10px; margin-top:8px;">
+        <button id="btnSelectFile" class="mdm-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 21V9m0 0l4 4m-4-4L8 13M4 3h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          Pilih Berkas
+        </button>
+      </div>
+      <p class="small" style="margin-top:8px;">Format: Array objek { id, role, content, ts }.</p>
+    `);
+    const btnSel = el.modalBody.querySelector("#btnSelectFile");
+    btnSel.addEventListener("click", () => el.fileImport.click());
+  }
+
+  function doClear() {
+    state.messages = [];
+    renderMessages();
+    saveHistory();
+    // Seed a greeting
+    const hello = {
+      id: uid(), role: "assistant",
+      content: "Halo! Saya Ai Chat Assistent dari MDM(Marilmu Dot Marepeng). Tanyakan apa pun, Saya siap membantu anda.",
+      ts: nowTs()
+    };
+    state.messages.push(hello);
+    appendMessageEl(hello);
+    saveHistory();
+  }
+
+  function openModal(title, html) {
+    el.modalTitle.textContent = title;
+    el.modalBody.innerHTML = html;
+    if (!el.modal.open) el.modal.showModal();
+  }
+
+  function closeModal() {
+    if (el.modal.open) el.modal.close();
+  }
+
+  function updateProviderBadge() {
+    el.badge.textContent = state.provider.label;
+  }
+
+  function autoResizeInput() {
+    const ta = el.input;
+    ta.style.height = "auto";
+    ta.style.height = Math.min(ta.scrollHeight, 180) + "px";
+  }
+
+  // Preflight validation
+  function preflight() {
+    if (!el.btnSend || !pipeline) throw new Error("Inisialisasi gagal: UI/Pipeline");
+    // Monetag is async; will retry in ensureMonetagLoaded
+    return true;
+  }
+
+  // Event bindings
+  function bindEvents() {
+    // Theme toggle
+    el.btnTheme.addEventListener("click", () => {
+      // Theme toggle is not a core action; no reward gating to avoid UX pain
+      toggleTheme();
+    });
+
+    // Menu (Bottom Sheet Quick Info)
+    el.btnMenu.addEventListener("click", () => {
+      openModal("Menu", `
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <div><strong>Judul:</strong> ${TITLE}</div>
+          <div><strong>Worker:</strong> <span>${state.provider.label}</span></div>
+          <div class="small">MDM (marilmu dot marepeng) • Warna brand Dongker ${BRAND.color}</div>
+        </div>
+      `);
+    });
+
+    // Close modal
+    el.btnCloseModal.addEventListener("click", closeModal);
+    el.modal.addEventListener("click", (e) => {
+      const rect = el.modal.querySelector(".modal-card").getBoundingClientRect();
+      if (e.clientY < rect.top || e.clientY > rect.bottom || e.clientX < rect.left || e.clientX > rect.right) closeModal();
+    });
+
+    // Composer
+    el.input.addEventListener("input", autoResizeInput);
+    el.input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        if (el.btnSend.disabled) return;
+        withReward(el.btnSend, sendMessageFlow, "Mengirim pesan…");
+      }
+    });
+    el.btnSend.addEventListener("click", () => withReward(el.btnSend, sendMessageFlow, "Mengirim pesan…"));
+
+    // Toolbar actions (all gated by reward)
+    el.btnExport.addEventListener("click", () => withReward(el.btnExport, async () => exportJSON(), "Menyiapkan ekspor…"));
+    el.btnImport.addEventListener("click", () => withReward(el.btnImport, async () => openImportModal(), "Membuka impor…"));
+    el.btnDownload.addEventListener("click", () => withReward(el.btnDownload, async () => downloadTXT(), "Menyiapkan unduhan…"));
+    el.btnClear.addEventListener("click", () => withReward(el.btnClear, async () => {
+      const sure = confirm("Bersihkan semua riwayat chat?");
+      if (sure) doClear();
+    }, "Membersihkan…"));
+
+    // File import
+    el.fileImport.addEventListener("change", async (e) => {
+      const f = e.target.files?.[0];
+      if (!f) return;
+      try {
+        const text = await f.text();
+        const data = JSON.parse(text);
+        if (!Array.isArray(data)) throw new Error("Format tidak valid");
+        // Basic validation
+        const clean = data.filter(x => x && (x.role === "user" || x.role === "assistant") && typeof x.content === "string")
+                          .map(x => ({ id: x.id || uid(), role: x.role, content: x.content, ts: x.ts || nowTs() }));
+        if (!clean.length) throw new Error("Data kosong");
+        state.messages = clean;
+        renderMessages();
+        saveHistory();
+        toast("Impor berhasil");
+        closeModal();
+      } catch (err) {
+        toast("Impor gagal: " + (err.message || err));
+      } finally {
+        e.target.value = "";
+      }
+    });
+
+    // Footer CTAs (gated)
+    el.footerBtns.profile.addEventListener("click", () => withReward(el.footerBtns.profile, async () => {
+      openModal("Profil", `
+        <p><strong>${TITLE}</strong> oleh <strong>MDM (marilmu dot marepeng)</strong>.</p>
+        <p>Asisten AI profesional dalam Bahasa Indonesia. UI mobile premium, ringan, dan responsif.</p>
+      `);
+    }, "Membuka profil…"));
+
+    el.footerBtns.privacy.addEventListener("click", () => withReward(el.footerBtns.privacy, async () => {
+      openModal("Kebijakan Privasi", `
+        <p>Riwayat chat disimpan <em>lokal</em> di perangkat kamu (localStorage). Tidak ada perekaman server oleh aplikasi ini.</p>
+        <p>Permintaan AI dikirim ke pihak ketiga (Pollinations / AI Horde). Jangan kirim data sensitif.</p>
+      `);
+    }, "Membuka privasi…"));
+
+    el.footerBtns.disclaimer.addEventListener("click", () => withReward(el.footerBtns.disclaimer, async () => {
+      openModal("Disclaimer", `
+        <p>Balasan AI bisa mengandung kekeliruan. Verifikasi informasi penting secara mandiri.</p>
+        <p>Layanan pihak ketiga dapat mengalami gangguan. Aplikasi menyediakan fallback otomatis.</p>
+      `);
+    }, "Membuka disclaimer…"));
+
+    el.footerBtns.contact.addEventListener("click", () => withReward(el.footerBtns.contact, async () => {
+      openModal("Hubungi Kami", `
+        <p>Email: support@mdm.example (contoh)</p>
+        <p>Telegram: @mdm_support (contoh)</p>
+      `);
+    }, "Membuka kontak…"));
+  }
+
+  // Init
+  function init() {
+    // Title
+    el.title.textContent = TITLE;
+
+    // Theme from storage
+    const savedTheme = localStorage.getItem(THEME_KEY) || "dark";
+    applyTheme(savedTheme);
+
+    // Load history
+    const hist = loadHistory();
+    if (hist.length) {
+      state.messages = hist;
+      renderMessages();
+    } else {
+      doClear(); // seeds greeting
+    }
+
+    // Preflight
+    preflight();
+    // Bind
+    bindEvents();
+
+    // Input autoresize
+    autoResizeInput();
+    // Provider badge
+    updateProviderBadge();
+  }
+
+  // Run
+  document.addEventListener("DOMContentLoaded", init);
+})();
+  </script>
+</body>
+</html>
